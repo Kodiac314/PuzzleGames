@@ -68,17 +68,31 @@ class Zips(template):
             return None
         
         # Backtracking the line
-        if self.grid[cy][cx] == len(self.path)-1 and len(self.path) > 1:
-            r, c = self.path.pop()
-            self.grid[r][c] = 0
+        if self.grid[cy][cx] != 0:
+            while self.path[-1] != (cy, cx):
+                r, c = self.path.pop()
+                self.grid[r][c] = 0
             return
         
         # Adding to the line
-        if self.grid[cy][cx] != 0:
+        if self.grid[cy][cx] != 0: # Tile already seen
+            return
+        if (cy, cx) in self.clues: # # Numbered tile visited out of order
+            i = self.clues.index((cy, cx))
+            nr, nc = self.clues[i-1]
+            if self.grid[nr][nc] == 0:
+                return
+        if (cy, cx) == self.clues[-1] and all(TARGET-1 not in row for row in self.grid): # Last tile without all other tiles
             return
         for i in range(4):
             nr, nc = cy + D[i], cx + D[i+1]
             if 0 <= nr < SZ and 0 <= nc < SZ and self.grid[nr][nc] == len(self.path):
+                # Wall in the way [1,0,-1,0,1] dn,lf,up,rt
+                if (i == 0 and self.walls[nr][nc][0]) or (
+                    i == 1 and self.walls[cy][cx][1]) or (
+                    i == 2 and self.walls[cy][cx][0]) or (
+                    i == 3 and self.walls[nr][nc][1]):
+                    break
                 self.path.append((cy, cx))
                 self.grid[cy][cx] = len(self.path)
                 break
@@ -164,3 +178,4 @@ def fill(grid: list[list[int]], path: list[list[int]], row: int, col: int) -> bo
     grid[row][col] = 0
     path.pop()
     return False
+
